@@ -3,7 +3,7 @@
   "bundle_version": 1,
   "architecture": "amd64",
   "rpm_architecture": "x86_64",
-  "generated_at": "2026-11-08T03:09:33Z",
+  "generated_at": "2026-11-10T13:49:40Z",
   "postgresql_version": "18.6",
   "postgresql_rpm_version": "18.6-1PGDG.rhel9.8",
   "base_images": {
@@ -1023,6 +1023,21 @@
       "sha256": "d55744c4fe83a63a71906ca41607c5c0deff227a69b957708cc6a37537be4a29",
       "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
       "source_rpm": "libxml2-2.9.13-14.el9_8.5.src.rpm"
+    },
+    {
+      "name": "libxslt",
+      "epoch": 0,
+      "version": "1.1.34",
+      "release": "14.el9_8.1",
+      "architecture": "x86_64",
+      "nevra": "libxslt-0:1.1.34-14.el9_8.1.x86_64",
+      "filename": "libxslt-1.1.34-14.el9_8.1.x86_64.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/appstream/os/Packages/l/libxslt-1.1.34-14.el9_8.1.x86_64.rpm",
+      "repository": "ubi-9-appstream-rpms",
+      "size": 254411,
+      "sha256": "b702d5bdce34b424959427b728e319b17747a5a1249be5f908264c5cfcbddf38",
+      "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
+      "source_rpm": "libxslt-1.1.34-14.el9_8.1.src.rpm"
     },
     {
       "name": "libzstd",
@@ -2245,14 +2260,14 @@
       "version": "18.6",
       "release": "1PGDG.rhel9.8",
       "architecture": "x86_64",
-      "source_rpm": "postgresql18-18.6-1PGDG.rhel9.8.src.rpm",
       "nevra": "postgresql18-contrib-0:18.6-1PGDG.rhel9.8.x86_64",
       "filename": "postgresql18-contrib-18.6-1PGDG.rhel9.8.x86_64.rpm",
       "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-x86_64/postgresql18-contrib-18.6-1PGDG.rhel9.8.x86_64.rpm",
       "repository": "pgdg-18",
       "size": 775538,
       "sha256": "705fd7f054754400269f435adde37dc3d0d678b31e1ba287a014b5fffc23feb6",
-      "signing_key_fingerprint": "D4BF08AE67A0B4C7A1DBCCD240BCA2B408B40D20"
+      "signing_key_fingerprint": "D4BF08AE67A0B4C7A1DBCCD240BCA2B408B40D20",
+      "source_rpm": "postgresql18-18.6-1PGDG.rhel9.8.src.rpm"
     },
     {
       "name": "postgresql18-libs",
@@ -2283,6 +2298,51 @@
       "sha256": "f7f1915d63756f6a37f3f2e5cc84d03893d0d7a55dab8ac350871bd1c48a0754",
       "signing_key_fingerprint": "D4BF08AE67A0B4C7A1DBCCD240BCA2B408B40D20",
       "source_rpm": "postgresql18-18.6-1PGDG.rhel9.8.src.rpm"
+    },
+    {
+      "name": "python3-libs",
+      "epoch": 0,
+      "version": "3.9.25",
+      "release": "7.el9_8.6",
+      "architecture": "x86_64",
+      "nevra": "python3-libs-0:3.9.25-7.el9_8.6.x86_64",
+      "filename": "python3-libs-3.9.25-7.el9_8.6.x86_64.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/os/Packages/p/python3-libs-3.9.25-7.el9_8.6.x86_64.rpm",
+      "repository": "ubi-9-baseos-rpms",
+      "size": 8485333,
+      "sha256": "81171c8d882015d070adb1e4dbecabed80bcc37f7b9937afd7c4c314aa4faffa",
+      "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
+      "source_rpm": "python3.9-3.9.25-7.el9_8.6.src.rpm"
+    },
+    {
+      "name": "python3-pip-wheel",
+      "epoch": 0,
+      "version": "21.3.1",
+      "release": "2.el9_8",
+      "architecture": "noarch",
+      "nevra": "python3-pip-wheel-0:21.3.1-2.el9_8.noarch",
+      "filename": "python3-pip-wheel-21.3.1-2.el9_8.noarch.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/os/Packages/p/python3-pip-wheel-21.3.1-2.el9_8.noarch.rpm",
+      "repository": "ubi-9-baseos-rpms",
+      "size": 1198443,
+      "sha256": "918041963ad5c3b91276bf1ed3307280673ca8352e2e632bbb3847b33d2bc15a",
+      "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
+      "source_rpm": "python-pip-21.3.1-2.el9_8.src.rpm"
+    },
+    {
+      "name": "python3-setuptools-wheel",
+      "epoch": 0,
+      "version": "53.0.0",
+      "release": "15.el9",
+      "architecture": "noarch",
+      "nevra": "python3-setuptools-wheel-0:53.0.0-15.el9.noarch",
+      "filename": "python3-setuptools-wheel-53.0.0-15.el9.noarch.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/os/Packages/p/python3-setuptools-wheel-53.0.0-15.el9.noarch.rpm",
+      "repository": "ubi-9-baseos-rpms",
+      "size": 479203,
+      "sha256": "36dacb345e21bc0308ef2508f0c93995520a15ef0b56aab3593186c8dc9c0c5a",
+      "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
+      "source_rpm": "python-setuptools-53.0.0-15.el9.src.rpm"
     },
     {
       "name": "readline",
@@ -2358,6 +2418,21 @@
       "sha256": "17294ee3fbc09c1b5cfc4114d3815cbd92584d6d70a6288e1dce2fda0a62dc59",
       "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
       "source_rpm": "shadow-utils-4.9-16.el9.src.rpm"
+    },
+    {
+      "name": "sqlite-libs",
+      "epoch": 0,
+      "version": "3.34.1",
+      "release": "11.el9_8",
+      "architecture": "x86_64",
+      "nevra": "sqlite-libs-0:3.34.1-11.el9_8.x86_64",
+      "filename": "sqlite-libs-3.34.1-11.el9_8.x86_64.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/os/Packages/s/sqlite-libs-3.34.1-11.el9_8.x86_64.rpm",
+      "repository": "ubi-9-baseos-rpms",
+      "size": 665095,
+      "sha256": "e5c20e933ec01f746a6c59a94cb99f46c6138dab3f387f0d02dab47f356e2e98",
+      "signing_key_fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
+      "source_rpm": "sqlite-3.34.1-11.el9_8.src.rpm"
     },
     {
       "name": "systemd",
@@ -2861,6 +2936,13 @@
       "sha256": "9d74877c619d42084e23f168cb494170e0480d2b5c3f6d58f727e47439d7fc5b"
     },
     {
+      "filename": "libxslt-1.1.34-14.el9_8.1.src.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/appstream/source/SRPMS/Packages/l/libxslt-1.1.34-14.el9_8.1.src.rpm",
+      "repository": "ubi-9-appstream-source-rpms",
+      "size": 3571429,
+      "sha256": "a63ad81bc1461ee56521e3b488b804cf2e43ec2b5dd5e7b3ab4bfe1e8a59d748"
+    },
+    {
       "filename": "lz4-1.9.3-5.el9.src.rpm",
       "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/source/SRPMS/Packages/l/lz4-1.9.3-5.el9.src.rpm",
       "repository": "ubi-9-baseos-source-rpms",
@@ -3204,6 +3286,27 @@
       "sha256": "73529be04e064ee9f0464adc47853f73d532698bc6fe03e35019aa469e4dcc7b"
     },
     {
+      "filename": "python-pip-21.3.1-2.el9_8.src.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/source/SRPMS/Packages/p/python-pip-21.3.1-2.el9_8.src.rpm",
+      "repository": "ubi-9-baseos-source-rpms",
+      "size": 8988034,
+      "sha256": "c755a55a4023f5a52ecae2029ebb9be588981de14a10ff9adc4174277e47a00a"
+    },
+    {
+      "filename": "python-setuptools-53.0.0-15.el9.src.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/source/SRPMS/Packages/p/python-setuptools-53.0.0-15.el9.src.rpm",
+      "repository": "ubi-9-baseos-source-rpms",
+      "size": 2080284,
+      "sha256": "08d279a3ec69f016e717f56bcec922cd68353fa8acba8de8fb56cf34ebc876a5"
+    },
+    {
+      "filename": "python3.9-3.9.25-7.el9_8.6.src.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/source/SRPMS/Packages/p/python3.9-3.9.25-7.el9_8.6.src.rpm",
+      "repository": "ubi-9-baseos-source-rpms",
+      "size": 20842730,
+      "sha256": "f6d2fc0e9a65986d6017c740f1c03bb44975296d120a8897cf6ced64dff30428"
+    },
+    {
       "filename": "readline-8.1-4.el9.src.rpm",
       "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/source/SRPMS/Packages/r/readline-8.1-4.el9.src.rpm",
       "repository": "ubi-9-baseos-source-rpms",
@@ -3237,6 +3340,13 @@
       "repository": "ubi-9-baseos-source-rpms",
       "size": 1713058,
       "sha256": "771a5ed07cdb690c75cd428a8113e2ee471270044e6cb8025d92c54e32c180ff"
+    },
+    {
+      "filename": "sqlite-3.34.1-11.el9_8.src.rpm",
+      "url": "https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/x86_64/baseos/source/SRPMS/Packages/s/sqlite-3.34.1-11.el9_8.src.rpm",
+      "repository": "ubi-9-baseos-source-rpms",
+      "size": 25117596,
+      "sha256": "4efcc956008f0468362b41bdba79111c41027b682bcdea3ecca3744cf50ebfd7"
     },
     {
       "filename": "systemd-252-67.el9_8.6.src.rpm",

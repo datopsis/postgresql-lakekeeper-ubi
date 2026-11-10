@@ -119,6 +119,7 @@ jobs:
           BUILDX_METADATA_PROVENANCE: min
           CONTAINER_RUNTIME: docker
           IMAGE: ${{ env.TEST_IMAGE }}
+          RELEASE_REVISION: ${{ github.sha }}
         run: bash scripts/build-offline.sh
 
       - name: Prove acquisition material is absent from the final image

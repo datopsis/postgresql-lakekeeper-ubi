@@ -46,6 +46,8 @@ RUN test -n "${ARTIFACT_LOCK_SHA256}" \
         /final/var/lib/rhsm \
         /final/var/log/* \
         /final/var/tmp/* \
+        /final/usr/share/python3-wheels \
+        /final/usr/lib64/python3.9/ensurepip \
     && find /final -xdev -type f -perm /6000 -exec chmod a-s {} + \
     && ! find /final -xdev -type f -perm -0002 -print -quit | grep -q . \
     && mkdir -p /final/var/lib/pgsql \

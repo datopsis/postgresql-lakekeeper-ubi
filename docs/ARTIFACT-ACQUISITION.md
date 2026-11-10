@@ -32,6 +32,8 @@ through explicit input edits; the updater does not silently adopt new keys.
 The final filesystem retains only the five contrib add-ons, but installation
 uses the full signed RPM dependency closure without --nodeps. Dependencies of
 removed modules may therefore remain and are included in vulnerability scans.
+Python installer wheels and ensurepip are removed from the final filesystem,
+while their supplier RPM records and licenses remain for traceability.
 Do not falsify the RPM database or suppress their findings to obtain green CI.
 
 Changed supplier bytes, missing sources, wrong architecture, unapproved signers,
