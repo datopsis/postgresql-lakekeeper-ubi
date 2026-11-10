@@ -1,0 +1,29 @@
+services:
+  postgresql:
+    image: localhost/postgresql-lakekeeper-ubi:development
+    environment:
+      POSTGRES_DB: lakekeeper
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+    secrets:
+      - source: postgres-password
+        target: postgres-password
+        mode: 0440
+    ports:
+      - "127.0.0.1:5432:5432"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+    volumes:
+      - postgres-data:/var/lib/pgsql
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_signal: SIGINT
+
+secrets:
+  postgres-password:
+    environment: POSTGRES_PASSWORD
+
+volumes:
+  postgres-data:
