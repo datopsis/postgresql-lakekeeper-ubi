@@ -156,10 +156,18 @@ test "$("${runtime}" exec "${primary}" id -g)" = 0
 assert_process_security "${primary}"
 "${runtime}" exec "${primary}" sh -ec \
     'grep -Eq "^[^ ]+ / [^ ]+ ro(,| )" /proc/mounts'
-"${runtime}" exec "${primary}" sh -ceu \
-    '! command -v dnf; ! command -v microdnf; ! command -v rpm; ! command -v yum;
-     ! command -v pip; ! command -v pip3;
-     test ! -e /usr/share/python3-wheels; test ! -e /usr/lib64/python3.9/ensurepip'
+# Expand the manager name inside the container.
+# shellcheck disable=SC2016
+"${runtime}" exec "${primary}" sh -ceu '
+    for manager in dnf microdnf rpm yum pip pip3; do
+        if command -v "${manager}" >/dev/null 2>&1; then
+            echo "unexpected runtime package manager: ${manager}" >&2
+            exit 1
+        fi
+    done
+    test ! -e /usr/share/python3-wheels
+    test ! -e /usr/lib64/python3.9/ensurepip
+'
 "${runtime}" exec "${primary}" sh -ceu \
     '! (printf probe > /root-filesystem-probe) 2>/dev/null'
 if grep -Fq "${password}" <<<"$("${runtime}" logs "${primary}" 2>&1)"; then
