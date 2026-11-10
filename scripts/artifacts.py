@@ -252,6 +252,10 @@ def validate_lock(path: Path) -> dict:
     missing_sources = {item["source_rpm"] for item in packages} - source_files
     if missing_sources:
         fail(f"binary packages lack source records: {', '.join(sorted(missing_sources))}")
+    forbidden = {"python3-libs", "python3-pip-wheel", "python3-setuptools-wheel", "sqlite-libs", "libxslt"}
+    present = forbidden & {item["name"] for item in packages}
+    if present:
+        fail(f"lock contains dependencies of removed contrib modules: {', '.join(sorted(present))}")
     required_pg = {"postgresql18", "postgresql18-libs", "postgresql18-server", "postgresql18-contrib"}
     if required_pg - {item["name"] for item in packages}:
         fail("lock does not contain all required PostgreSQL packages")

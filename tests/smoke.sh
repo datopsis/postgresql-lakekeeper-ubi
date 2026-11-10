@@ -124,6 +124,10 @@ sql "${primary}" 'CREATE DATABASE lakekeeper;' >/dev/null
 test "$("${runtime}" exec --env "PGPASSWORD=${password}" "${primary}" psql -XAt \
     --host=127.0.0.1 --username=postgres --dbname=lakekeeper \
     --command="SELECT string_agg(extname, ',' ORDER BY extname) FROM pg_extension;")" = "${expected_extensions}"
+# Exercise each add-on through authenticated SQL, including both index methods.
+"${runtime}" exec --interactive --env "PGPASSWORD=${password}" "${primary}" psql -X \
+    --host=127.0.0.1 --username=postgres --dbname=lakekeeper \
+    --set=ON_ERROR_STOP=1 < tests/extensions.sql
 # A removed extension must fail with the unavailable-extension diagnostic.
 if output=$(sql "${primary}" 'CREATE EXTENSION hstore;' 2>&1); then
     echo 'removed hstore extension unexpectedly installed' >&2
@@ -165,6 +169,9 @@ assert_process_security "${primary}"
             exit 1
         fi
     done
+    test ! -e /usr/lib64/libpython3.9.so.1.0
+    test ! -e /usr/lib64/libsqlite3.so.0
+    test ! -e /usr/lib64/libxslt.so.1
     test ! -e /usr/share/python3-wheels
     test ! -e /usr/lib64/python3.9/ensurepip
 '

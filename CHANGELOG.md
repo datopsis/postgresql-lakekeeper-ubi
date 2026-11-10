@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Exclude Python 3.9 libraries, pip/setuptools wheels, SQLite and libxslt from
+  locks and runtime installation; restrict --nodeps to the pruned contrib RPM.
+- Fail builds on forbidden RPM records, unsatisfied dependencies in any other
+  package, or missing final-root server/extension libraries. Exercise functions
+  and integer GIN/GiST indexes from all five retained add-ons in native tests.
+
 - Add standalone, rootless PGDG PostgreSQL 18.6 on digest-pinned UBI 9.8 Micro
   for Lakekeeper metadata, using the postgresql-ubi design.
 - Lock signed contrib RPMs and retain only five add-ons plus core PL/pgSQL.

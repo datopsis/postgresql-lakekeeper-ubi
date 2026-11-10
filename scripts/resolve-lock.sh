@@ -25,6 +25,20 @@ rpm --checksig "${input_dir}"/rpms/*.rpm
 mkdir -p /tmp/resolve-root
 rpm --root /tmp/resolve-root --initdb
 rpm --root /tmp/resolve-root --import "${input_dir}"/keys/*
+# Resolve the normal server/client closure. Contrib is signature-verified above
+# and retained as a locked seed, but its removed modules must not pull dependencies.
+normal_seeds=()
+contrib_count=0
+for path in "${input_dir}"/rpms/*.rpm; do
+    name=$(rpm --query --package --queryformat '%{NAME}' "${path}")
+    if test "${name}" = postgresql18-contrib; then
+        contrib_count=$((contrib_count + 1))
+    else
+        normal_seeds+=("${path}")
+    fi
+done
+test "${contrib_count}" -eq 1
+test "${#normal_seeds[@]}" -eq 3
 dnf install -y \
     --downloadonly \
     --downloaddir="${output_dir}/rpms" \
@@ -33,7 +47,7 @@ dnf install -y \
     --setopt=localpkg_gpgcheck=1 \
     --setopt=install_weak_deps=0 \
     --setopt=keepcache=0 \
-    "${input_dir}"/rpms/*.rpm \
+    "${normal_seeds[@]}" \
     ca-certificates nss_wrapper tzdata
 cp "${input_dir}"/rpms/*.rpm "${output_dir}/rpms/"
 

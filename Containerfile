@@ -12,6 +12,8 @@ ARG ARTIFACT_LOCK_SHA256
 COPY .artifact-bundle/${TARGETARCH}/ /tmp/artifacts/
 COPY --chmod=0755 scripts/verify-rpm-bundle.sh /usr/local/bin/verify-rpm-bundle
 COPY --chmod=0755 scripts/prune-extensions.sh /usr/local/bin/prune-extensions
+COPY --chmod=0755 scripts/install-runtime-rpms.sh /usr/local/bin/install-runtime-rpms
+COPY --chmod=0755 scripts/verify-runtime-dependencies.sh /usr/local/bin/verify-runtime-dependencies
 COPY --from=runtime-base / /final/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -24,7 +26,7 @@ RUN test -n "${ARTIFACT_LOCK_SHA256}" \
     && mkdir -p /runtime \
     && rpm --root /runtime --initdb \
     && rpm --root /runtime --import /tmp/artifacts/keys/* \
-    && rpm --root /runtime --install /tmp/artifacts/rpms/*.rpm \
+    && install-runtime-rpms /runtime /tmp/artifacts/rpms \
     && rpm --root /runtime --query --all \
         --qf '%{NAME}-%{VERSION}-%{RELEASE}\n' \
         | sed -n '/^gpg-pubkey-/p' > /tmp/imported-keys \
@@ -46,13 +48,12 @@ RUN test -n "${ARTIFACT_LOCK_SHA256}" \
         /final/var/lib/rhsm \
         /final/var/log/* \
         /final/var/tmp/* \
-        /final/usr/share/python3-wheels \
-        /final/usr/lib64/python3.9/ensurepip \
     && find /final -xdev -type f -perm /6000 -exec chmod a-s {} + \
     && ! find /final -xdev -type f -perm -0002 -print -quit | grep -q . \
     && mkdir -p /final/var/lib/pgsql \
     && chown -R 26:0 /final/var/lib/pgsql \
-    && chmod 2775 /final/var/lib/pgsql
+    && chmod 2775 /final/var/lib/pgsql \
+    && verify-runtime-dependencies /final
 
 FROM scratch
 

@@ -29,12 +29,17 @@ Compare both architectures, source/license changes, base indices and signing
 identities, then rerun native CI. PostgreSQL seeds and signing keys only change
 through explicit input edits; the updater does not silently adopt new keys.
 
-The final filesystem retains only the five contrib add-ons, but installation
-uses the full signed RPM dependency closure without --nodeps. Dependencies of
-removed modules may therefore remain and are included in vulnerability scans.
-Python installer wheels and ensurepip are removed from the final filesystem,
-while their supplier RPM records and licenses remain for traceability.
-Do not falsify the RPM database or suppress their findings to obtain green CI.
+The resolver computes the normal server/client dependency closure and adds the
+verified contrib seed without resolving dependencies of its discarded modules.
+Only postgresql18-contrib is installed separately with --nodeps. The five excluded
+packages (python3-libs, python3-pip-wheel, python3-setuptools-wheel, sqlite-libs,
+libxslt) and their otherwise-unreferenced source records are absent from each
+lock. No other lock entries, versions, hashes or signatures change for this
+reduction. Native resolver candidates must reproduce the selected closure.
+The lock validator rejects those five packages, and the final build checks RPM
+absence, every other package's dependencies and actual server/extension linkage.
+See [the bounded exception](EXTENSIONS.md#narrow-contrib-dependency-exception).
+Never falsify supplier RPM metadata or suppress scanner findings.
 
 Changed supplier bytes, missing sources, wrong architecture, unapproved signers,
 invalid hashes and signature failures block acquisition/build. Never substitute

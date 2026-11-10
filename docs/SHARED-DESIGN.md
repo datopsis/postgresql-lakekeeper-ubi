@@ -14,8 +14,9 @@ when either changes. Record the source commit and intentional differences in
 changes. Do not change the general-purpose sibling's extension support contract.
 
 Intentional differences here: Lakekeeper-only support; the contrib RPM and its
-dependency closure; five allowlisted add-ons; removal of every other contrib
-payload and Python installer payloads from its dependency closure; explicit opt-in SQL; complete Trivy and Grype JSON with a common blocking
+single-package dependency exception; five allowlisted add-ons; removal of every
+other contrib payload; exclusion of dependencies used only by removed modules;
+explicit opt-in SQL; complete Trivy and Grype JSON with a common blocking
 gate; read-only lock candidates; and no release, signing or publishing workflow.
 
 Core PL/pgSQL and initdb/template semantics remain unchanged. The shared entrypoint
