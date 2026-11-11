@@ -1,0 +1,284 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install pre-commit
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all:
+          --disable-pip-version-check
+          --requirement .github/requirements/pre-commit.txt
+
+      - name: Run repository checks
+        run: pre-commit run --all-files --show-diff-on-failure
+
+      - name: Run artifact lock negative tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Validate committed artifact locks
+        run: |
+          python scripts/artifacts.py validate-inputs artifacts/lock-inputs.json
+          python scripts/artifacts.py validate-lock artifacts/locks/amd64.json
+          python scripts/artifacts.py validate-lock artifacts/locks/arm64.json
+
+      - name: Audit GitHub Actions security
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          advanced-security: false
+          annotations: true
+          min-severity: medium
+
+  configuration-security:
+    name: configuration security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Scan repository configuration
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+
+  image:
+    name: image (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+            platform: linux/amd64
+            machine: x86_64
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            machine: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      TEST_IMAGE: localhost/postgresql-lakekeeper-ubi9:test-${{ matrix.architecture }}
+      SBOM_FILE: postgresql-lakekeeper-ubi9-${{ matrix.architecture }}.spdx.json
+      PROVENANCE_FILE: provenance-${{ matrix.architecture }}.json
+      GRYPE_ALL: grype-all-${{ matrix.architecture }}.json
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          driver: docker
+
+      - name: Confirm native runner architecture
+        env:
+          EXPECTED_MACHINE: ${{ matrix.machine }}
+        run: test "$(uname -m)" = "${EXPECTED_MACHINE}"
+
+      - name: Acquire, verify, and build from the locked bundle
+        env:
+          BUILD_METADATA_FILE: ${{ env.PROVENANCE_FILE }}
+          BUILDX_METADATA_PROVENANCE: min
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+          RELEASE_REVISION: ${{ github.sha }}
+        run: bash scripts/build-offline.sh
+
+      - name: Prove acquisition material is absent from the final image
+        run: |
+          if docker history --no-trunc --format '{{.CreatedBy}}' "${TEST_IMAGE}" | grep -E 'download[.]postgresql[.]org|dnf-srpms[.]postgresql[.]org|cdn-ubi[.]redhat[.]com|security[.]access[.]redhat[.]com|RPM-GPG-KEY|[.]artifact-bundle|/tmp/artifacts'; then
+            echo 'forbidden acquisition material found in final image history' >&2
+            exit 1
+          fi
+          test -s "${PROVENANCE_FILE}"
+          if grep -E 'download[.]postgresql[.]org|dnf-srpms[.]postgresql[.]org|cdn-ubi[.]redhat[.]com|security[.]access[.]redhat[.]com|RPM-GPG-KEY|[.]artifact-bundle|/tmp/artifacts' "${PROVENANCE_FILE}"; then
+            echo 'forbidden acquisition material found in build provenance' >&2
+            exit 1
+          fi
+          docker run --rm --user 0 --entrypoint /bin/sh "${TEST_IMAGE}" -ec '
+            for path in /etc/dnf /etc/pki/entitlement /etc/pki/rpm-gpg /etc/rhsm /etc/yum.repos.d /var/cache/dnf /var/cache/yum; do
+              if test -e "${path}"; then
+                echo "forbidden final-image path: ${path}" >&2
+                exit 1
+              fi
+            done
+            if find / -xdev -type f \( -name "*RPM-GPG-KEY*" -o -name "*.repo" -o -perm /6000 -o -perm -0002 \) -print -quit | grep -q .; then
+              echo "forbidden key, repository, privilege, or writable file found" >&2
+              find / -xdev -type f \( -name "*RPM-GPG-KEY*" -o -name "*.repo" -o -perm /6000 -o -perm -0002 \) -print >&2
+              exit 1
+            fi
+          '
+
+      - name: Confirm loaded image architecture
+        env:
+          EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
+        run: >-
+          test "$(docker image inspect --format '{{.Architecture}}' "${TEST_IMAGE}")"
+          = "${EXPECTED_ARCHITECTURE}"
+
+      - name: Run restricted-runtime smoke tests
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/smoke.sh
+
+      - name: Test authentication and configuration security
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/runtime-security.sh
+
+      - name: Test durable storage and lifecycle
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/storage-lifecycle.sh
+
+      - name: Test resource exhaustion and recovery
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/resource-limits.sh
+
+      - name: Test a preserved-data PostgreSQL 18 minor update
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/minor-update.sh
+
+      - name: Test the TLS server profile
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/tls.sh
+
+      - name: Record cryptographic linkage inventory
+        run: |
+          docker run --rm --entrypoint /bin/sh "${TEST_IMAGE}" -ec '
+            uname -m
+            /usr/pgsql-18/bin/postgres --version
+            /usr/pgsql-18/bin/pg_config --configure
+            ldd /usr/pgsql-18/bin/postgres
+            ldd /usr/pgsql-18/bin/psql
+            if command -v openssl >/dev/null; then openssl version -a; else echo "openssl executable absent"; fi
+          ' > "crypto-inventory-${{ matrix.architecture }}.txt"
+          test -s "crypto-inventory-${{ matrix.architecture }}.txt"
+
+      - name: Generate SPDX SBOM with Syft
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.TEST_IMAGE }}
+          format: spdx-json
+          output-file: ${{ env.SBOM_FILE }}
+          syft-version: v1.51.1
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Prove acquisition material is absent from the SBOM
+        run: >-
+          test -z "$(grep -E
+          'download[.]postgresql[.]org|dnf-srpms[.]postgresql[.]org|cdn-ubi[.]redhat[.]com|security[.]access[.]redhat[.]com|RPM-GPG-KEY|[.]artifact-bundle|/tmp/artifacts'
+          "${SBOM_FILE}" || true)"
+
+      - name: Record all Trivy findings
+        id: trivy
+        if: ${{ !cancelled() && hashFiles(env.SBOM_FILE) != '' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.TEST_IMAGE }}
+          format: json
+          output: trivy-all-${{ matrix.architecture }}.json
+          exit-code: "0"
+          ignore-unfixed: false
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          trivyignores: ''
+
+      - name: Record all Grype findings
+        id: grype
+        if: ${{ !cancelled() && hashFiles(env.SBOM_FILE) != '' }}
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          sbom: ${{ env.SBOM_FILE }}
+          output-format: json
+          output-file: ${{ env.GRYPE_ALL }}
+          severity-cutoff: negligible
+          only-fixed: false
+          fail-build: false
+          cache-db: true
+          grype-version: v0.118.0
+
+      - name: Block fixed High and Critical vulnerabilities without exemptions
+        if: ${{ !cancelled() && hashFiles(env.SBOM_FILE) != '' }}
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: >-
+          python scripts/vulnerability-gate.py
+          --trivy "trivy-all-${ARCHITECTURE}.json"
+          --grype "${GRYPE_ALL}"
+          --summary "vulnerability-summary-${ARCHITECTURE}.json"
+
+      - name: Retain image security artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-security-${{ github.sha }}-${{ matrix.architecture }}
+          path: |
+            ${{ env.SBOM_FILE }}
+            ${{ env.PROVENANCE_FILE }}
+            ${{ env.GRYPE_ALL }}
+            trivy-all-${{ matrix.architecture }}.json
+            vulnerability-summary-${{ matrix.architecture }}.json
+            crypto-inventory-${{ matrix.architecture }}.txt
+          if-no-files-found: warn
+          retention-days: 14
+
+
+  image-result:
+    name: image
+    if: ${{ always() }}
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every native image job
+        env:
+          MATRIX_RESULT: ${{ needs.image.result }}
+        run: test "${MATRIX_RESULT}" = success

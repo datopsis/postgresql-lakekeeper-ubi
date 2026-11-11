@@ -1,0 +1,131 @@
+name: Resolve artifact lock candidates
+
+on:
+  pull_request:
+    paths:
+      - artifacts/**
+      - scripts/*lock*
+      - scripts/artifacts.py
+      - scripts/refresh-bases.py
+      - .github/workflows/update-locks.yml
+  schedule:
+    - cron: "17 8 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: update-locks-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  bases:
+    name: resolve UBI manifest indexes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Refresh selected UBI release and verify both platforms
+        run: python scripts/refresh-bases.py
+
+      - name: Share the same pinned bases with both native resolvers
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: base-input-candidate
+          path: |
+            Containerfile
+            artifacts/lock-inputs.json
+          if-no-files-found: error
+          retention-days: 7
+
+  resolve:
+    needs: bases
+    name: resolve candidate (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+            platform: linux/amd64
+            machine: x86_64
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            machine: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the common base selection
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: base-input-candidate
+
+      - name: Confirm native runner architecture
+        env:
+          EXPECTED_MACHINE: ${{ matrix.machine }}
+        run: test "$(uname -m)" = "${EXPECTED_MACHINE}"
+
+      - name: Validate candidate lock inputs
+        run: python scripts/artifacts.py validate-inputs artifacts/lock-inputs.json
+
+      - name: Acquire PostgreSQL seeds and approved keys
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: >-
+          python scripts/artifacts.py acquire-inputs
+          --inputs artifacts/lock-inputs.json
+          --architecture "${ARCHITECTURE}"
+          --output resolution-inputs
+
+      - name: Verify approved key fingerprints
+        run: bash scripts/verify-key-fingerprints.sh resolution-inputs
+
+      - name: Resolve and inspect the complete RPM closure
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          UBI_MINIMAL="$(python -c 'import json; print(json.load(open("artifacts/lock-inputs.json"))["base_images"]["builder"])')"
+          docker run --rm --platform "${PLATFORM}" \
+            --volume "${PWD}:/work" --workdir /work \
+            "${UBI_MINIMAL}" bash scripts/resolve-lock.sh \
+            "${ARCHITECTURE}" /work/resolution-inputs /work/resolution-output
+
+      - name: Render and validate candidate lock
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          python scripts/render-lock.py \
+            --inputs artifacts/lock-inputs.json \
+            --architecture "${ARCHITECTURE}" \
+            --binary-inventory resolution-output/binary-inventory.tsv \
+            --source-inventory resolution-output/source-inventory.tsv \
+            --output "candidate-locks/${ARCHITECTURE}.json"
+          python scripts/artifacts.py validate-lock "candidate-locks/${ARCHITECTURE}.json"
+
+      - name: Retain candidate for maintainer review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: artifact-lock-candidate-${{ matrix.architecture }}
+          path: candidate-locks/${{ matrix.architecture }}.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Retain resolver inventories
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: resolution-inventories-${{ matrix.architecture }}
+          path: resolution-output/*-inventory.tsv
+          if-no-files-found: error
+          retention-days: 7

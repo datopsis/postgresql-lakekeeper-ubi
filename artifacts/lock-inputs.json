@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "bundle_version": 1,
+  "postgresql_version": "18.6",
+  "postgresql_rpm_version": "18.6-1PGDG.rhel9.8",
+  "ubi_release": "9.8",
+  "base_images": {
+    "builder": "registry.access.redhat.com/ubi9/ubi-minimal:9.8@sha256:f26ef64172ea61f5ac5ba4be8c5c738bf8760b22b3e5148ce7b40f7308ab32db",
+    "runtime": "registry.access.redhat.com/ubi9/ubi-micro:9.8@sha256:d3499a0896e2d6a1642f922615831bc5c2fd513bbb34f3446cabba530d9d54a2"
+  },
+  "architectures": {
+    "amd64": {
+      "rpm_architecture": "x86_64",
+      "postgresql_rpms": [
+        {
+          "sha256": "ae57ba32d87fa3c311da9545bc85682ae04dc41cfbabf60d7f6c185099604f8a",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-x86_64/postgresql18-18.6-1PGDG.rhel9.8.x86_64.rpm"
+        },
+        {
+          "sha256": "7a4d55c02b8bab1b359aa25ce53d81db77cd39026a980dd8f0210031a5c31654",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-x86_64/postgresql18-libs-18.6-1PGDG.rhel9.8.x86_64.rpm"
+        },
+        {
+          "sha256": "f7f1915d63756f6a37f3f2e5cc84d03893d0d7a55dab8ac350871bd1c48a0754",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-x86_64/postgresql18-server-18.6-1PGDG.rhel9.8.x86_64.rpm"
+        },
+        {
+          "sha256": "705fd7f054754400269f435adde37dc3d0d678b31e1ba287a014b5fffc23feb6",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-x86_64/postgresql18-contrib-18.6-1PGDG.rhel9.8.x86_64.rpm"
+        }
+      ],
+      "pgdg_key": "pgdg-rhel"
+    },
+    "arm64": {
+      "rpm_architecture": "aarch64",
+      "postgresql_rpms": [
+        {
+          "sha256": "3ec399a4d57b43cbba03f610adc4a4c6daaea0dc8b4f3d73175b1dedf7e2bddf",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-aarch64/postgresql18-18.6-1PGDG.rhel9.8.aarch64.rpm"
+        },
+        {
+          "sha256": "662bac810d50ece9d32f7ab6960f01e8e1416cc0a0634a4ea7f7ec8ea744146b",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-aarch64/postgresql18-libs-18.6-1PGDG.rhel9.8.aarch64.rpm"
+        },
+        {
+          "sha256": "761001b6e560041f2f6f0d7abe9e57b30a98a2c039b81682d77969928a366add",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-aarch64/postgresql18-server-18.6-1PGDG.rhel9.8.aarch64.rpm"
+        },
+        {
+          "sha256": "068412c0d465f83cff148064f77d77e3fa1ed431af98b9488203b010b9999f41",
+          "url": "https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-aarch64/postgresql18-contrib-18.6-1PGDG.rhel9.8.aarch64.rpm"
+        }
+      ],
+      "pgdg_key": "pgdg-aarch64-rhel"
+    }
+  },
+  "signing_keys": [
+    {
+      "fingerprint": "D4BF08AE67A0B4C7A1DBCCD240BCA2B408B40D20",
+      "id": "pgdg-rhel",
+      "sha256": "a70c9527426017d00fa4e6f9d2941d515357a27a7be82e155248ece53bbe5453",
+      "url": "https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL"
+    },
+    {
+      "fingerprint": "B031F89FC983E98262906B6E177B343BB9738825",
+      "id": "pgdg-aarch64-rhel",
+      "sha256": "cc506fa92aa97e8e58f88551a2ec99a61d9d603f7f2c1ae0c06191f58c29979f",
+      "url": "https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-AARCH64-RHEL"
+    },
+    {
+      "fingerprint": "567E347AD0044ADE55BA8A5F199E2F91FD431D51",
+      "id": "redhat-release",
+      "sha256": "d4b2543626bee31d9438d4a31731aae712c072893c7aed8854f16c42fafc742b",
+      "url": "https://security.access.redhat.com/data/fd431d51.txt"
+    },
+    {
+      "fingerprint": "7E4624258C406535D56D6F135054E4A45A6340B3",
+      "id": "redhat-release-2",
+      "sha256": "d37ed8bd8bddb29983a38c6fde4e59d329e6a7c2ecbc702e929f0d05ae5eba59",
+      "url": "https://security.access.redhat.com/data/5a6340b3.txt"
+    }
+  ]
+}

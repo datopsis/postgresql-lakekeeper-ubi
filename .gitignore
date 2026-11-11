@@ -1,0 +1,30 @@
+# Generated release and security evidence
+*.sarif
+*.spdx.json
+*.sbom.json
+provenance-*.json
+*.oci.tar
+cosign.bundle
+
+# Local tooling
+.venv/
+__pycache__/
+.pytest_cache/
+.artifact-bundle/
+
+# Local database and secret material
+data/
+secrets/
+*.key
+*.pem
+
+# Downloaded scanner evidence and resolver output
+security-results/
+trivy-all-*.json
+grype-all-*.json
+vulnerability-summary-*.json
+resolution-inputs/
+resolution-output/
+candidate-locks/
+.env
+.env.*
