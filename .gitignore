@@ -32,3 +32,6 @@ candidate-locks/
 # Ephemeral TLS fixtures and evidence
 .runtime/
 tls-coverage-*.json
+tls/
+*.crt
+*.csr

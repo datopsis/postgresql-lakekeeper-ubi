@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 import secrets
 import shutil
+import signal
 import subprocess
 import tempfile
 import time
@@ -18,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def validate_url(url, plaintext_probe=False):
     parsed = urlsplit(url)
-    options = parse_qs(parsed.query, strict_parsing=True)
+    options = parse_qs(parsed.query, strict_parsing=True, keep_blank_values=True)
     assert parsed.scheme == 'postgresql' and parsed.port == 5432
     assert parsed.username == 'postgres' and parsed.password is None
     assert parsed.path == '/lakekeeper'
@@ -48,11 +49,19 @@ class Profile:
         self.volumes = [self.prefix + suffix for suffix in ('-data', '-server-tls', '-client-tls')]
         self.password = secrets.token_hex(24)
         self.rows = []
+        self.created_containers = set()
+        self.created_volumes = []
+        self.created_network = False
         self.report = {'revision': os.environ.get('GITHUB_SHA', 'local'), 'scope': 'Phase A item 1; psql/libpq, not Lakekeeper SQLx',
                        'image': self.image, 'coverage': self.rows, 'complete': False}
 
     def command(self, *args, check=True):
         result = subprocess.run(list(map(str, args)), capture_output=True, text=True, timeout=120)
+        if result.returncode:
+            diagnostics = ROOT / '.runtime' / 'tls-diagnostics.log'
+            diagnostics.parent.mkdir(exist_ok=True)
+            with diagnostics.open('a') as stream:
+                stream.write(result.stderr.replace(self.password, '[REDACTED]'))
         if check and result.returncode:
             # Do not print command arguments, environment, PEMs or unfiltered logs.
             raise RuntimeError(f'command failed ({args[0]}), exit {result.returncode}')
@@ -91,6 +100,7 @@ class Profile:
                  '--env', 'POSTGRES_PASSWORD_FILE=/run/tls/password',
                  '--env', 'POSTGRESQL_TLS_CERT_FILE=/run/tls/server.crt',
                  '--env', 'POSTGRESQL_TLS_KEY_FILE=/run/tls/server.key', self.image)
+        self.created_containers.add(self.server)
 
     def ready(self):
         for _ in range(90):
@@ -202,14 +212,20 @@ class Profile:
         for name in self.report['certificates']:
             (self.directory / name / 'password').write_text(self.password)
         (self.directory / 'client' / 'pgpass').write_text(f'*:5432:lakekeeper:postgres:{self.password}\n')
+        self.report['trust_anchors'] = {name: self.command('openssl', 'x509', '-in',
+            self.directory / 'client' / f'{name}.crt', '-noout', '-fingerprint', '-sha256',
+            '-dates', '-subject').stdout.strip() for name in ('trusted', 'unrelated')}
         self.run('network', 'create', '--ipv6', self.network)
+        self.created_network = True
         for volume in self.volumes:
             self.run('volume', 'create', volume)
+            self.created_volumes.append(volume)
         self.select('valid')
         self.stage(self.directory / 'client', self.volumes[2])
         self.run('run', '-d', '--name', self.client, '--network', self.network, *self.hardened(),
                  '--mount', f'type=volume,src={self.volumes[2]},dst=/run/tls,readonly',
                  '--env', 'PGPASSFILE=/run/tls/pgpass', '--entrypoint', 'sleep', self.image, 'infinity')
+        self.created_containers.add(self.client)
         self.start()
         self.ready()
         self.control()
@@ -304,11 +320,14 @@ class Profile:
             shutil.rmtree(source)
 
     def cleanup(self):
-        for name in (self.server, self.client):
-            self.run('rm', '-fv', name, check=False)
-        for volume in self.volumes:
-            self.run('volume', 'rm', '-f', volume, check=False)
-        self.run('network', 'rm', self.network, check=False)
+        results = []
+        for name in sorted(self.created_containers):
+            results.append(self.run('rm', '-fv', name, check=False))
+        for volume in self.created_volumes:
+            results.append(self.run('volume', 'rm', '-f', volume, check=False))
+        if self.created_network:
+            results.append(self.run('network', 'rm', self.network, check=False))
+        assert all(r.returncode == 0 for r in results), 'TLS resource cleanup failed'
 
 
 def main():
@@ -317,16 +336,24 @@ def main():
     runtime.mkdir(exist_ok=True)
     directory = Path(tempfile.mkdtemp(prefix='tls-', dir=runtime))
     profile = Profile(directory)
+
+    def interrupted(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        signal.signal(signum, interrupted)
     try:
         profile.execute()
     finally:
         output = Path(os.environ.get('TLS_REPORT', runtime / 'tls-coverage.json'))
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(profile.report, indent=2) + '\n')
         try:
-            profile.cleanup()
+            output.write_text(json.dumps(profile.report, indent=2) + '\n')
         finally:
-            shutil.rmtree(directory)
+            try:
+                profile.cleanup()
+            finally:
+                shutil.rmtree(directory)
 
 
 if __name__ == '__main__':

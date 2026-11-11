@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import os
 import secrets
+import shutil
 import subprocess
 
 
@@ -68,7 +69,13 @@ subjectKeyIdentifier = hash
         target = directory / name
         target.mkdir()
         stem = target / 'server'
-        request(stem, cn)
+        if name in ('wrong-root', 'wrong-san', 'expired', 'future'):
+            # Keep the positive key/subject constant; mutate only the target property.
+            shutil.copyfile(directory / 'valid/server.key', stem.with_suffix('.key'))
+            openssl('req', '-new', '-sha256', '-subj', f'/CN={cn}',
+                    '-key', stem.with_suffix('.key'), '-out', stem.with_suffix('.csr'))
+        else:
+            request(stem, cn)
         extensions = authority / 'leaf.ext'
         extensions.write_text(f'''basicConstraints=critical,CA:FALSE
 keyUsage=critical,digitalSignature,keyEncipherment

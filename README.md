@@ -37,7 +37,9 @@ service's files; follow the key ownership rules in [TLS configuration](docs/CONF
 
 ```sh
 podman volume create lakekeeper-postgres-data
+podman network create lakekeeper-metadata
 podman run --detach --name lakekeeper-postgres \
+  --network lakekeeper-metadata --network-alias postgres \
   --read-only \
   --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777 \
   --mount type=volume,src=lakekeeper-postgres-data,dst=/var/lib/pgsql \
@@ -55,7 +57,10 @@ podman run --detach --name lakekeeper-postgres \
 
 Network authentication is SCRAM-SHA-256 over TLS. Clients use `postgres` as
 the verified DNS name, `sslmode=verify-full`, and their own read-only CA mount.
-The TLS profile rejects plaintext TCP; client-certificate auth is outside this profile. PostgreSQL runs as `26:0`, with no privilege transition, package manager,
+The alias resolves inside `lakekeeper-metadata`; host clients must provision
+matching DNS for the published loopback port. The TLS profile rejects plaintext
+TCP; client-certificate auth is outside this profile. PostgreSQL runs as `26:0`,
+with no privilege transition, package manager,
 or writable root requirement. Arbitrary nonzero UIDs in GID 0 use `nss_wrapper`.
 The image cannot force runtime flags: the operator must retain the hardening above.
 

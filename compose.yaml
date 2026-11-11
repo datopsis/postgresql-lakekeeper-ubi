@@ -10,6 +10,10 @@ services:
       - source: postgres-password
         target: postgres-password
         mode: 0440
+    networks:
+      default:
+        aliases:
+          - postgres
     ports:
       - "127.0.0.1:5432:5432"
     read_only: true

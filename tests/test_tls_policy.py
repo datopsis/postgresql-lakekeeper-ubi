@@ -6,8 +6,9 @@ import subprocess
 import tempfile
 import unittest
 
-import yaml
 from urllib.parse import unquote
+
+import yaml
 
 from tls_pki import generate
 from tls_profile import ROOT, url, validate_url
@@ -15,7 +16,7 @@ from tls_profile import ROOT, url, validate_url
 
 # Only rule definitions and their mutation tests are excluded from the deny scan.
 DENY = re.compile(
-    r'verify\s*[:=]\s*false|--insecure\b|curl\s+[^\n]*\s-k\b|cert_none|'
+    r'verify\s*[:=]\s*false|--insecure\b|curl\b[^\n]*\s-[a-z]*k[a-z]*(?=\s|$)|cert_none|'
     r'check_hostname\s*[:=]\s*false|insecure_?skip_?verify\s*[:=]\s*true|'
     r'danger_accept_invalid_(?:certs|hostnames)|aws_allow_invalid_certificates\s*[:=]\s*true|'
     r'(?:proxy|grpc)_ssl_verify\s+off|aws_allow_http\s*[:=]\s*true|'
@@ -50,6 +51,7 @@ class TLSPolicyTests(unittest.TestCase):
             self.assertEqual(len(mounts), 1)
             self.assertTrue(mounts[0].endswith(':ro'))
             self.assertIn(':?supply', mounts[0])
+        self.assertIn('postgres', service['networks']['default']['aliases'])
         self.assertTrue(service['read_only'])
         self.assertEqual(service['cap_drop'], ['ALL'])
         self.assertEqual(service['security_opt'], ['no-new-privileges:true'])
@@ -60,11 +62,12 @@ class TLSPolicyTests(unittest.TestCase):
         for mode in ('require', 'allow', 'prefer', 'disable', 'verify-ca'):
             with self.subTest(mode=mode), self.assertRaises(AssertionError):
                 validate_url(valid.replace('verify-full', mode))
-        for suffix in ('&sslmode=verify-full', '&sslmode=disable', '&sslcert=/other/key'):
+        for suffix in ('&sslmode=verify-full', '&sslmode=disable', '&sslmode=', '&sslcert=/other/key'):
             with self.assertRaises(AssertionError):
                 validate_url(valid + suffix)
         for bad in ('verify=False', 'VERIFY=false', 'InsecureSkipVerify=true',
-                    'PGSSLMODE=require', 'sslmode%3Dprefer', 'curl -s -k https://postgres'):
+                    'PGSSLMODE=require', 'sslmode%3Dprefer', 'curl -s -k https://postgres',
+                    'curl -k https://postgres', 'curl -ks https://postgres'):
             self.assertIsNotNone(DENY.search(unquote(bad)))
 
     def test_real_pki_dates_identity_and_issuers(self):
