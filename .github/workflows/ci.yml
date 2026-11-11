@@ -188,6 +188,7 @@ jobs:
         env:
           CONTAINER_RUNTIME: docker
           IMAGE: ${{ env.TEST_IMAGE }}
+          TLS_REPORT: tls-coverage-${{ matrix.architecture }}.json
         run: bash tests/tls.sh
 
       - name: Record cryptographic linkage inventory
@@ -267,6 +268,7 @@ jobs:
             trivy-all-${{ matrix.architecture }}.json
             vulnerability-summary-${{ matrix.architecture }}.json
             crypto-inventory-${{ matrix.architecture }}.txt
+            tls-coverage-${{ matrix.architecture }}.json
           if-no-files-found: warn
           retention-days: 14
 

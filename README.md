@@ -31,8 +31,9 @@ No passwords are generated, defaulted or logged by the image. Alternatively,
 set `POSTGRES_PASSWORD` in the operator's environment and pass it by name;
 container inspect APIs can retain environment secrets, so prefer a mounted file.
 
-Example for an isolated local development network, using a pre-provisioned
-`secrets/postgres-password` file with those permissions:
+Example using a pre-provisioned `secrets/postgres-password` and operator-issued
+`tls/postgres/server.crt` / `server.key` (SAN `DNS:postgres`). Mount only this
+service's files; follow the key ownership rules in [TLS configuration](docs/CONFIGURATION.md):
 
 ```sh
 podman volume create lakekeeper-postgres-data
@@ -43,14 +44,18 @@ podman run --detach --name lakekeeper-postgres \
   --volume "$PWD/secrets/postgres-password:/run/secrets/postgres-password:ro,Z" \
   --env POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password \
   --env POSTGRES_DB=lakekeeper \
+  --volume "$PWD/tls/postgres/server.crt:/run/tls/server.crt:ro,Z" \
+  --volume "$PWD/tls/postgres/server.key:/run/tls/server.key:ro,Z" \
+  --env POSTGRESQL_TLS_CERT_FILE=/run/tls/server.crt \
+  --env POSTGRESQL_TLS_KEY_FILE=/run/tls/server.key \
   --publish 127.0.0.1:5432:5432 \
   --cap-drop ALL --security-opt no-new-privileges \
   localhost/postgresql-lakekeeper-ubi:development
 ```
 
-Network authentication is SCRAM-SHA-256. The example has no transport encryption;
-use the [TLS profile](docs/CONFIGURATION.md) outside a separately enforced isolated
-network. PostgreSQL runs as `26:0`, with no privilege transition, package manager,
+Network authentication is SCRAM-SHA-256 over TLS. Clients use `postgres` as
+the verified DNS name, `sslmode=verify-full`, and their own read-only CA mount.
+The TLS profile rejects plaintext TCP; client-certificate auth is outside this profile. PostgreSQL runs as `26:0`, with no privilege transition, package manager,
 or writable root requirement. Arbitrary nonzero UIDs in GID 0 use `nss_wrapper`.
 The image cannot force runtime flags: the operator must retain the hardening above.
 
