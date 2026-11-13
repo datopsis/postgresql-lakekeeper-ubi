@@ -12,3 +12,10 @@ tests
 *.sarif
 *.spdx.json
 grype*.json
+
+# Ephemeral TLS fixtures and evidence
+.runtime/
+tls-coverage-*.json
+tls/
+*.crt
+*.csr

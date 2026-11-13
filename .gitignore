@@ -29,6 +29,13 @@ candidate-locks/
 .env
 .env.*
 
+# Ephemeral TLS fixtures and evidence
+.runtime/
+tls-coverage-*.json
+tls/
+*.crt
+*.csr
+
 # Synthetic native UBI gate evidence
 ubi-gate-probes-*.json
 vulnerability-summary-*.md

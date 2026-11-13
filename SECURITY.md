@@ -48,7 +48,10 @@ handling and extension pruning. Operators own host isolation, enforced runtime
 flags, TLS PKI, network boundaries, roles, encryption at rest, storage, backups,
 monitoring and patch rollout. Local socket trust assumes exclusive control of
 the container and its bounded /tmp. Anyone able to exec as the runtime UID can
-administer the database. This is not a multi-tenant security boundary.
+administer the database. This is not a multi-tenant security boundary. For
+Phase A, the owner allows this container-local Unix-socket plaintext exception;
+all network connections require verify-full TLS. The socket tmpfs must not be
+shared with other containers.
 
 No FIPS validation, STIG certification, Red Hat PostgreSQL support or production
 qualification is claimed. See [support](docs/SUPPORT.md).
