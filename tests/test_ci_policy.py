@@ -34,7 +34,7 @@ class CIPolicyTests(unittest.TestCase):
         job = ci['jobs']['image']
         self.assertEqual({x['architecture']: x['runner'] for x in job['strategy']['matrix']['include']},
                          {'amd64': 'ubuntu-24.04', 'arm64': 'ubuntu-24.04-arm'})
-        gates = [step for step in job['steps'] if 'scripts/vulnerability-gate.py' in step.get('run', '')]
+        gates = [step for step in job['steps'] if 'scripts/run-vulnerability-gate.sh' in step.get('run', '')]
         self.assertEqual(len(gates), 1)
         self.assertNotIn('continue-on-error', gates[0])
         self.assertNotIn('continue-on-error', job)

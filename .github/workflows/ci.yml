@@ -254,7 +254,6 @@ jobs:
         env:
           ARCHITECTURE: ${{ matrix.architecture }}
         run: |
-          # scripts/vulnerability-gate.py runs in the digest-pinned native builder.
           bash scripts/run-vulnerability-gate.sh "${ARCHITECTURE}"
 
       - name: Summarize deferred and blocking findings
