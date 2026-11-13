@@ -23,3 +23,11 @@ Core PL/pgSQL and initdb/template semantics remain unchanged. The shared entrypo
 is adapted only in diagnostic/lock-file naming. No startup hook implicitly
 creates extensions or migrates Lakekeeper. Keep Lakekeeper's declared database
 requirements in view when upgrading either project.
+
+The owner-approved UBI availability rule is an intentional gate-policy difference
+introduced here. The sibling was assessed at
+9b3190d4d3bccbd54d2f4965252762083f3ebeb7: its scanner actions directly block vendor
+fixed findings without UBI availability checks. Its lock resolver uses the same
+UBI repository design, so the same publication lag can affect it. Applying this
+policy there requires a separate owner-scoped change; this PR leaves its support
+contract and implementation untouched. No shared runtime code changes here.

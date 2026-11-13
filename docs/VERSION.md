@@ -1,7 +1,7 @@
 # Version identity
 
 Current PostgreSQL: **18.6**, PGDG RPM release **18.6-1PGDG.rhel9.8**.
-Base line: **Red Hat UBI 9.8**, Minimal builder and Micro runtime, pinned to
+Base line: **Red Hat UBI 9.9**, Minimal builder and Micro runtime, pinned to
 multi-architecture manifest digests in artifacts/lock-inputs.json and both locks.
 
 No container release version or Git tag has been created. Development images

@@ -28,3 +28,7 @@ resolution-output/
 candidate-locks/
 .env
 .env.*
+
+# Synthetic native UBI gate evidence
+ubi-gate-probes-*.json
+vulnerability-summary-*.md
