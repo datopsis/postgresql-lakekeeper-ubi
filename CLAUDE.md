@@ -18,8 +18,10 @@ introducing a runtime dependency or extending that repository's support scope.
 
 Run lint/unit tests and native image tests, including extension creation and
 rejection, auth, TLS, persistence, shutdown and initialization failure. Read
-both scanners' reports on both architectures. Fixed High/Critical findings
-block; no exemptions, report-only replacement or weakened checks. Report limits
+both scanners' reports on both architectures. Follow the owner-approved UBI
+availability rule in SECURITY.md: defer fixed High/Critical RPM findings only
+after successful native UBI queries prove the fix unavailable. Available fixes,
+non-RPM fixes and query uncertainty block; no exemption lists. Report limits
 honestly. Never commit databases, secrets, private keys or generated scan output.
 
 CI requirements must be completely hash-pinned with .in inputs. update-locks.yml

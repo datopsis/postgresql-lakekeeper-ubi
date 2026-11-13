@@ -1,6 +1,7 @@
 # Continuous integration
 
-All workflows use contents: read and SHA-pinned actions. No workflow publishes
+All workflows use contents: read and SHA-pinned actions. Only the trusted-main
+tracking job additionally has issues: write to maintain the availability issue. No workflow publishes
 images, releases, signatures or Git tags. No workflow writes branches or PRs.
 
 CI jobs:
@@ -17,12 +18,17 @@ CI jobs:
 
 Each native job emits an SPDX SBOM with Syft and full Trivy/Grype JSON, including
 unfixed and lower-severity findings. `vulnerability-gate.py` is the mandatory
-blocking gate: either scanner's fixed High/Critical finding returns failure,
-without exemptions. Report generation is followed by enforcement; exit-zero
+blocking gate: fixed High/Critical findings block unless a successful native
+UBI query proves an RPM fix unavailable, under [the security rule](../SECURITY.md).
+Non-RPM fixes and query uncertainty always block. There are no exemption lists. Report generation is followed by enforcement; exit-zero
 collection is not the acceptance decision. Missing or malformed reports fail.
 The complete evidence is uploaded even if the gate fails and retained 14 days.
 Review both JSON reports, summaries, logs and every job/step; green alone is
 insufficient evidence. Retain exact commit/run IDs when downloading artifacts.
+
+Daily CI rechecks availability at 07:23 UTC. Scheduled/manual runs of main update
+one tracking issue and comment only on state changes. Missing native evidence
+is reported as unknown and blocking, never as resolved. PRs cannot write issues.
 
 Lock updates run separate native resolver jobs and retain candidate artifacts
 for seven days. They cannot modify GitHub contents, settings or permissions.
@@ -30,6 +36,7 @@ for seven days. They cannot modify GitHub contents, settings or permissions.
 ## Local checks
 
 ```sh
+# Install the system python3-rpm package for native RPM comparison tests.
 python3 -m venv .venv
 .venv/bin/pip install --require-hashes --only-binary=:all: \
   --requirement .github/requirements/pre-commit.txt

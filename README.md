@@ -77,7 +77,8 @@ This image never runs migrations or startup SQL hooks.
 
 [CI](docs/CI.md) runs lint, negative tests, native builds, hardened runtime/TLS/
 storage tests, SBOM generation and blocking Trivy/Grype gates for fixed
-High/Critical findings, with no exemptions. It retains complete JSON reports
+High/Critical findings under the [UBI availability rule](SECURITY.md), with no
+exemption lists. It retains complete JSON reports
 for both architectures. Nothing publishes an image, tag, signature or release.
 
 - [Configuration and TLS](docs/CONFIGURATION.md)
