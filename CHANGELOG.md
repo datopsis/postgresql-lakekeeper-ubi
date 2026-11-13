@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refresh both native RPM locks and UBI 9.9 Minimal/Micro base pins now that the
+  util-linux family and other vendor security fixes are available in UBI.
+
 - Apply the owner-approved UBI availability rule to fixed High/Critical RPM
   findings: defer only when a fresh native query proves no qualifying fix is
   available; keep available fixes, non-RPM fixes and query uncertainty blocking.

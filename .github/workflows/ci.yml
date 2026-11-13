@@ -281,6 +281,7 @@ jobs:
             vulnerability-summary-${{ matrix.architecture }}.json
             vulnerability-summary-${{ matrix.architecture }}.md
             crypto-inventory-${{ matrix.architecture }}.txt
+            ubi-gate-probes-${{ matrix.architecture }}.json
           if-no-files-found: warn
           retention-days: 14
 
