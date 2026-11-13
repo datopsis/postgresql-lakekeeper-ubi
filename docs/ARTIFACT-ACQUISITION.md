@@ -15,10 +15,10 @@ final build disables network access and further pulls. No acquisition keys,
 repository configuration, cache or package manager survives in the final image.
 Source records and third-party terms remain reviewable in Git.
 
-`refresh-bases.py` resolves the live UBI 9.8 Minimal/Micro tags once, verifies
+`refresh-bases.py` resolves the live UBI 9.9 Minimal/Micro tags once, verifies
 manifest bytes against their digest and requires one Linux amd64 and one Linux
 arm64 manifest in each index. Both native resolver jobs consume those same pins.
-New bases were checked on 2026-11-10; full digests are in lock-inputs.json.
+New bases were checked on 2026-11-13; full digests are in lock-inputs.json.
 
 The scheduled/manual/lock-PR `update-locks.yml` has **contents: read** only and
 SHA-pinned actions. It uploads candidate Containerfile, inputs, architecture

@@ -14,8 +14,15 @@ class CIPolicyTests(unittest.TestCase):
             with self.subTest(workflow=path.name):
                 workflow = yaml.safe_load(path.read_text())
                 self.assertEqual(workflow['permissions'], {'contents': 'read'})
-                for job in workflow['jobs'].values():
-                    self.assertEqual(job.get('permissions', {'contents': 'read'}), {'contents': 'read'})
+                for name, job in workflow['jobs'].items():
+                    if path.name == 'ci.yml' and name == 'track-ubi-fixes':
+                        self.assertEqual(job['permissions'], {'contents': 'read', 'issues': 'write'})
+                        self.assertIn("github.ref == 'refs/heads/main'", job['if'])
+                        self.assertIn("github.event_name == 'schedule'", job['if'])
+                        self.assertNotIn('pull_request', job['if'])
+                        self.assertEqual(job['needs'], 'image')
+                    else:
+                        self.assertEqual(job.get('permissions', {'contents': 'read'}), {'contents': 'read'})
                     for step in job['steps']:
                         if 'uses' in step:
                             self.assertRegex(step['uses'], r'^[^@]+@[a-f0-9]{40}$')
@@ -27,7 +34,7 @@ class CIPolicyTests(unittest.TestCase):
         job = ci['jobs']['image']
         self.assertEqual({x['architecture']: x['runner'] for x in job['strategy']['matrix']['include']},
                          {'amd64': 'ubuntu-24.04', 'arm64': 'ubuntu-24.04-arm'})
-        gates = [step for step in job['steps'] if 'scripts/vulnerability-gate.py' in step.get('run', '')]
+        gates = [step for step in job['steps'] if 'scripts/run-vulnerability-gate.sh' in step.get('run', '')]
         self.assertEqual(len(gates), 1)
         self.assertNotIn('continue-on-error', gates[0])
         self.assertNotIn('continue-on-error', job)

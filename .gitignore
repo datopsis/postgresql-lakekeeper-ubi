@@ -35,3 +35,7 @@ tls-coverage-*.json
 tls/
 *.crt
 *.csr
+
+# Synthetic native UBI gate evidence
+ubi-gate-probes-*.json
+vulnerability-summary-*.md

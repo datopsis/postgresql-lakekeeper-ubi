@@ -72,9 +72,12 @@ those belong to plan item 4 and the integration gate. See [CI](CI.md) for the
 per-architecture evidence contract. No PostgreSQL binary, entrypoint default,
 extension allowance or sibling repository is changed by this qualification.
 
-The inherited `/tmp` Unix socket remains trusted and container-local. Tests
-prove the client container cannot access it. This does not decide the plan's
-owner question about local plaintext exceptions, nor claim all of Phase A done.
+For Phase A, the owner explicitly allows plaintext on the inherited
+container-local `/tmp` Unix socket. Keep its tmpfs private and control exec access;
+tests prove the client container cannot access the server socket. This exception
+applies only to local Unix sockets: every Phase A network connection must use
+`sslmode=verify-full` with the trusted CA and matching server DNS identity.
+This repository's qualification does not claim all of Phase A complete.
 The optional legacy non-TLS image profile remains unchanged; the example and
 Compose configuration select TLS explicitly. Omitting both variables deliberately
 selects that legacy profile, so deployment must require both mounts/settings.

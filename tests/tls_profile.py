@@ -200,7 +200,7 @@ class Profile:
             assert app == [('00000000' if family == 'tcp' else '0' * 32) + ':1538'], app
             sockets[family] = app
         self.report.update(settings=parsed, sockets=sockets, mounts_and_secret_isolation='passed',
-                           unix_socket='container-local /tmp only; cross-service policy remains owner decision')
+                           unix_socket='owner-approved Phase A plaintext exception: container-local /tmp only; network clients require verify-full TLS')
         network = server['NetworkSettings']['Networks'][self.network]
         for address in (network['IPAddress'], network['GlobalIPv6Address']):
             assert address

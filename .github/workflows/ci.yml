@@ -6,7 +6,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "23 7 * * 1"
+    - cron: "23 7 * * *"
   workflow_dispatch:
 
 permissions:
@@ -40,6 +40,9 @@ jobs:
 
       - name: Run repository checks
         run: pre-commit run --all-files --show-diff-on-failure
+
+      - name: Install native RPM comparison tooling
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y python3-rpm
 
       - name: Run artifact lock negative tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
@@ -246,15 +249,25 @@ jobs:
           cache-db: true
           grype-version: v0.118.0
 
-      - name: Block fixed High and Critical vulnerabilities without exemptions
+      - name: Block fixes available from UBI and fail closed on uncertainty
+        timeout-minutes: 11
         if: ${{ !cancelled() && hashFiles(env.SBOM_FILE) != '' }}
         env:
           ARCHITECTURE: ${{ matrix.architecture }}
-        run: >-
-          python scripts/vulnerability-gate.py
-          --trivy "trivy-all-${ARCHITECTURE}.json"
-          --grype "${GRYPE_ALL}"
-          --summary "vulnerability-summary-${ARCHITECTURE}.json"
+        run: |
+          bash scripts/run-vulnerability-gate.sh "${ARCHITECTURE}"
+
+      - name: Summarize deferred and blocking findings
+        if: ${{ always() }}
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          if test -s "vulnerability-summary-${ARCHITECTURE}.md"; then
+            cat "vulnerability-summary-${ARCHITECTURE}.md" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo 'Vulnerability gate evidence is missing. This run must not be treated as safe.' >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          fi
 
       - name: Retain image security artifacts
         if: ${{ always() }}
@@ -267,8 +280,10 @@ jobs:
             ${{ env.GRYPE_ALL }}
             trivy-all-${{ matrix.architecture }}.json
             vulnerability-summary-${{ matrix.architecture }}.json
+            vulnerability-summary-${{ matrix.architecture }}.md
             crypto-inventory-${{ matrix.architecture }}.txt
             tls-coverage-${{ matrix.architecture }}.json
+            ubi-gate-probes-${{ matrix.architecture }}.json
           if-no-files-found: warn
           retention-days: 14
 
@@ -284,3 +299,37 @@ jobs:
         env:
           MATRIX_RESULT: ${{ needs.image.result }}
         run: test "${MATRIX_RESULT}" = success
+
+  track-ubi-fixes:
+    name: track UBI fix availability
+    if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: ubi-fix-tracker
+      cancel-in-progress: false
+    steps:
+      - name: Check out trusted main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download native evidence from this run
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-security-${{ github.sha }}-*
+          path: security-results
+
+      - name: Update one issue and notify on state changes
+        if: ${{ always() && !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          python3 scripts/track-ubi-fixes.py --reports security-results
+          --repository "${REPOSITORY}" --run-url "${RUN_URL}" --write
