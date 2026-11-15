@@ -69,7 +69,7 @@ for scenario in unset equal different postgres quoted; do
         different) database=lakekeeper; options+=(--env "POSTGRES_DB=${database}") ;;
         postgres) database=postgres; options+=(--env "POSTGRES_DB=${database}") ;;
         quoted)
-            user="role ' with spaces"
+            user='role with spaces'
             database='database " with spaces'
             options+=(--env "POSTGRES_DB=${database}")
             ;;
