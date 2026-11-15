@@ -37,3 +37,11 @@ fixed findings without UBI availability checks. Its lock resolver uses the same
 UBI repository design, so the same publication lag can affect it. Applying this
 policy there requires a separate owner-scoped change; this PR leaves its support
 contract and implementation untouched. No shared runtime code changes here.
+
+The POSTGRES_DB initialization fix in this increment corrects a shared entrypoint
+assumption inherited from the baseline above: `initdb --username` creates a role,
+not a database with that name. This repository now creates the resolved database
+unless it is `postgres` and rejects template database names. The sibling baseline
+has the same defect and needs the equivalent runtime fix in a separately scoped
+PR; its code and support contract are unchanged here. Earlier qualification-only
+statements describe Phase A item 1, not this runtime correction.

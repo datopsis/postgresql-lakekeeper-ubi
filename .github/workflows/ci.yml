@@ -163,6 +163,12 @@ jobs:
           IMAGE: ${{ env.TEST_IMAGE }}
         run: bash tests/smoke.sh
 
+      - name: Test database initialization and restart
+        env:
+          CONTAINER_RUNTIME: docker
+          IMAGE: ${{ env.TEST_IMAGE }}
+        run: bash tests/database-init.sh
+
       - name: Test authentication and configuration security
         env:
           CONTAINER_RUNTIME: docker

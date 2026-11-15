@@ -122,6 +122,11 @@ write_host_authentication() {
 }
 
 initialize_database() {
+    database=${POSTGRES_DB:-${POSTGRES_USER}}
+    reject_line_breaks "${database}" POSTGRES_DB
+    case "${database}" in
+        template0|template1) fatal "POSTGRES_DB must not be template0 or template1" ;;
+    esac
     read_initial_password
     initialization_lock="${PGDATA}.postgresql-lakekeeper-ubi.init.lock"
     mkdir -- "${initialization_lock}" 2>/dev/null || \
@@ -147,9 +152,7 @@ initialize_database() {
         --options="-c listen_addresses='' -c unix_socket_directories=/tmp -c password_encryption=scram-sha-256 -c hba_file=${PGDATA}/pg_hba.conf -c logging_collector=off" \
         --wait start
 
-    database=${POSTGRES_DB:-${POSTGRES_USER}}
-    reject_line_breaks "${database}" POSTGRES_DB
-    if test "${database}" != "${POSTGRES_USER}"; then
+    if test "${database}" != postgres; then
         createdb --host=/tmp --username="${POSTGRES_USER}" -- "${database}"
     fi
 
