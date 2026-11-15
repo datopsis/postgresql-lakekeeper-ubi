@@ -55,6 +55,14 @@ podman run --detach --name lakekeeper-postgres \
   localhost/postgresql-lakekeeper-ubi:development
 ```
 
+On fresh initialization, `POSTGRES_USER` defaults to `postgres` and
+`POSTGRES_DB` defaults to `POSTGRES_USER` when unset or empty. The entrypoint
+creates that database owned by `POSTGRES_USER`, including when the names match.
+`postgres` uses the database already created by `initdb`; no extra database is
+created. `template0` and `template1` are rejected as application database names,
+and role/database names cannot contain line breaks. Existing data is never
+reinitialized: changing `POSTGRES_DB` on restart does not create a database.
+
 Network authentication is SCRAM-SHA-256 over TLS. Clients use `postgres` as
 the verified DNS name, `sslmode=verify-full`, and their own read-only CA mount.
 The alias resolves inside `lakekeeper-metadata`; host clients must provision

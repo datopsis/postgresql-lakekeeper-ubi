@@ -3,11 +3,19 @@
 | Variable | Meaning |
 | --- | --- |
 | POSTGRES_USER | Initial superuser, default postgres; reject line breaks |
-| POSTGRES_DB | Initial database, defaults to POSTGRES_USER |
+| POSTGRES_DB | Initial database, defaults to POSTGRES_USER when unset or empty; rejects line breaks and template0/template1 |
 | POSTGRES_PASSWORD / POSTGRES_PASSWORD_FILE | Exactly one operator-supplied bootstrap credential; required for empty data only |
 | PGDATA | Default /var/lib/pgsql/data, inside the explicit writable volume |
 | POSTGRESQL_CONFIG_FILE | Optional protected regular configuration file |
 | POSTGRESQL_TLS_CERT_FILE / POSTGRESQL_TLS_KEY_FILE | Both required together; protected regular PEM files mounted read-only |
+
+For empty data, `initdb` creates `postgres`, `template0` and `template1`.
+The entrypoint creates `POSTGRES_DB` owned by `POSTGRES_USER` whenever the resolved
+name is not `postgres`, even when it equals `POSTGRES_USER`. Selecting `postgres`
+uses the existing database without creating another. `template0` and `template1`
+are rejected before initialization, including when defaulted from `POSTGRES_USER`.
+Existing data bypasses database creation: changing `POSTGRES_DB` on restart
+neither creates nor renames a database.
 
 The entrypoint accepts only a nonempty single-line password. Secret files must
 have no trailing newline, cannot be symlinks, must be owned by root or the runtime

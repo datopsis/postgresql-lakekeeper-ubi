@@ -12,7 +12,8 @@ CI jobs:
 - `configuration security`: blocking High/Critical Trivy configuration scan.
 - `image (amd64)` and `image (arm64)`: native ubuntu-24.04 and ubuntu-24.04-arm,
   with uname and built-image architecture checks; no QEMU. Offline locked build,
-  acquisition-material checks, hardened smoke/extension tests, auth/configuration,
+  acquisition-material checks, hardened smoke/extension tests, database initialization/
+  ownership/authenticated connections and existing-data restarts, auth/configuration,
   storage/recovery/backup, resource limits, preserved-data minor update and TLS.
 - `image`: aggregate requires both native jobs to succeed.
 

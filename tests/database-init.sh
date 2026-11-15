@@ -42,8 +42,8 @@ sql() {
 }
 
 wait_ready() {
-    local attempt
-    for attempt in {1..90}; do
+    local _
+    for _ in {1..90}; do
         if test "$(sql postgres 'SELECT 1' 2>/dev/null)" = 1; then
             return
         fi
@@ -95,6 +95,41 @@ for scenario in unset equal different postgres quoted; do
     test "$(sql postgres 'SELECT count(*) FROM pg_database')" = "${expected_count}"
     "${runtime}" stop --time 30 "${name}" >/dev/null
     echo "database-init: ${scenario} fresh init, owner, authenticated connection and existing-data restart passed"
+done
+
+for scenario in template0 template1 default-template0 default-template1 newline carriage-return; do
+    name="${prefix}-${scenario}"
+    volume="${name}-data"
+    volumes+=("${volume}")
+    "${runtime}" volume create "${volume}" >/dev/null
+    user=rauthy
+    options=()
+    expected='POSTGRES_DB must not be template0 or template1'
+    case "${scenario}" in
+        template0|template1) options+=(--env "POSTGRES_DB=${scenario}") ;;
+        default-*) user=${scenario#default-} ;;
+        newline)
+            options+=(--env POSTGRES_DB=$'invalid\nname')
+            expected='POSTGRES_DB must not contain line breaks'
+            ;;
+        carriage-return)
+            options+=(--env POSTGRES_DB=$'invalid\rname')
+            expected='POSTGRES_DB must not contain line breaks'
+            ;;
+    esac
+    start "${name}" "${volume}" --env "POSTGRES_USER=${user}" \
+        --env "POSTGRES_PASSWORD=${password}" "${options[@]}"
+    # Bound failure tests too: a broken rejection must not hang the native job.
+    for _ in {1..30}; do
+        if test "$("${runtime}" inspect --format '{{.State.Running}}' "${name}")" != true; then
+            break
+        fi
+        sleep 1
+    done
+    test "$("${runtime}" inspect --format '{{.State.Running}}' "${name}")" = false
+    test "$("${runtime}" inspect --format '{{.State.ExitCode}}' "${name}")" != 0
+    "${runtime}" logs "${name}" 2>&1 | grep -F "${expected}"
+    echo "database-init: ${scenario} rejected clearly"
 done
 
 echo "PostgreSQL database initialization contract passed for ${image}"

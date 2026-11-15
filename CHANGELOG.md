@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix fresh initialization to create `POSTGRES_DB` (default `POSTGRES_USER`)
+  even when it equals the bootstrap user; reuse `postgres` and reject template
+  database names. Add native database/ownership/connection and restart coverage.
+
 - Refresh both native RPM locks and UBI 9.9 Minimal/Micro base pins now that the
   util-linux family and other vendor security fixes are available in UBI.
 
