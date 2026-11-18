@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from artifacts import LockError  # noqa: E402
+from artifacts import LockError, validate_inputs  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("refresh_bases", ROOT / "scripts/refresh-bases.py")
 refresh = importlib.util.module_from_spec(spec)
@@ -65,6 +65,17 @@ class BaseIndexTests(unittest.TestCase):
 
 
 class RenderUpdateTests(unittest.TestCase):
+    def test_native_release_override_must_be_a_nonempty_string(self):
+        inputs = json.loads((ROOT / "artifacts/lock-inputs.json").read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "inputs.json"
+            for value in (None, 2, ""):
+                with self.subTest(value=value):
+                    inputs["architectures"]["arm64"]["postgresql_rpm_version"] = value
+                    path.write_text(json.dumps(inputs))
+                    with self.assertRaises(LockError):
+                        validate_inputs(path)
+
     def test_noop_is_byte_identical_but_base_change_gets_new_timestamp(self):
         # Replay actual native inventory metadata through the production renderer.
         for arch in ("amd64", "arm64"):

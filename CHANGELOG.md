@@ -5,7 +5,9 @@
 - Update PostgreSQL to **18.7** with native PGDG RHEL 9.9 locks (amd64
   `18.7-1PGDG.rhel9.9`, arm64 `18.7-2PGDG.rhel9.9`) and refreshed UBI closure.
 - PostgreSQL [18.7 release notes](https://www.postgresql.org/docs/release/18.7/)
-  list the following security fixes:
+  list 52 security CVEs fixed below (including optional upstream modules that
+  this image does not ship). CVE-2026-6464 is mentioned only for a follow-up
+  correctness fix, so is not counted as a new security fix:
   CVE-2026-6460, CVE-2026-116306, CVE-2026-116329,
   CVE-2026-16237, CVE-2026-120146, CVE-2026-116310,
   CVE-2026-116332, CVE-2026-120143, CVE-2026-116304,
