@@ -55,7 +55,7 @@ CREATE EXTENSION, hstore rejection and the full hardened runtime suite.
 
 ## Removed extensions
 
-The following control/SQL extensions from PGDG 18.6 contrib are removed:
+The following control/SQL extensions from PGDG 18.7 contrib are removed:
 
 `amcheck`, `autoinc`, `bloom`, `citext`, `cube`, `dblink`, `dict_int`, `dict_xsyn`, `earthdistance`, `file_fdw`, `fuzzystrmatch`, `hstore`, `hstore_plperl`, `hstore_plperlu`, `insert_username`, `intagg`, `intarray`, `isn`, `jsonb_plperl`, `jsonb_plperlu`, `lo`, `ltree`, `moddatetime`, `pageinspect`, `pg_buffercache`, `pg_freespacemap`, `pg_logicalinspect`, `pg_prewarm`, `pg_stat_statements`, `pg_surgery`, `pg_visibility`, `pg_walinspect`, `pgrowlocks`, `pgstattuple`, `postgres_fdw`, `refint`, `seg`, `sslinfo`, `tablefunc`, `tcn`, `tsm_system_rows`, `tsm_system_time`, `unaccent`, `xml2`.
 

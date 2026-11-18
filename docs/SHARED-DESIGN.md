@@ -45,3 +45,11 @@ unless it is `postgres` and rejects template database names. The sibling baselin
 has the same defect and needs the equivalent runtime fix in a separately scoped
 PR; its code and support contract are unchanged here. Earlier qualification-only
 statements describe Phase A item 1, not this runtime correction.
+
+The PostgreSQL 18.7 lock refresh keeps runtime/auth/TLS behavior unchanged. The
+sibling resolver at the baseline commit above also hardcodes the x86_64 PGDG
+source directory. Here the resolver uses the native directory because PGDG's
+ARM64 release-2 source exists only there; inputs/rendering and image labels
+support an exact native RPM-release override. The sibling needs the same
+packaging correction when adopting architecture-specific rebuilds, in a separate
+owner-scoped change. Its repository and support contract remain unchanged.
