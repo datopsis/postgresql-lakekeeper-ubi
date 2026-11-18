@@ -107,7 +107,7 @@ test "$("${runtime}" image inspect --format '{{.Config.User}}' "${image}")" = "2
 run_restricted "${primary}" "${primary_volume}" \
     --env "POSTGRES_PASSWORD=${password}"
 wait_for_postgresql "${primary}"
-test "$(sql "${primary}" 'SHOW server_version;')" = "18.6"
+test "$(sql "${primary}" 'SHOW server_version;')" = "18.7"
 
 # The add-ons are available, but neither templates nor databases opt in silently.
 expected_extensions='btree_gin,btree_gist,pg_trgm,pgcrypto,plpgsql,uuid-ossp'

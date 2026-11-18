@@ -141,7 +141,7 @@ def validate_inputs(path: Path) -> dict:
         require_keys(
             entry,
             {"rpm_architecture", "postgresql_rpms", "pgdg_key"},
-            {"rpm_architecture", "postgresql_rpms", "pgdg_key"},
+            {"rpm_architecture", "postgresql_rpms", "pgdg_key", "postgresql_rpm_version"},
             f"architecture {architecture}",
         )
         if entry["rpm_architecture"] != rpm_architecture:

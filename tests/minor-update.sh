@@ -123,4 +123,4 @@ test "$("${runtime}" exec "${new_container}" psql -qAt --host=/tmp --username=po
     --format=custom --file=/tmp/post-update.dump postgres
 "${runtime}" exec "${new_container}" sh -c 'test -s /tmp/post-update.dump; test -s /backup/pre-update.dump'
 
-echo "PostgreSQL 18.4 to 18.6 preserved-data update passed for ${image}"
+echo "PostgreSQL 18.4 to 18.7 preserved-data update passed for ${image}"

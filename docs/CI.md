@@ -84,3 +84,12 @@ both manifests and both scanners' complete reports; the blocking vulnerability
 gate is unchanged. This scope does not qualify Lakekeeper SQLx or cross-service
 Phase A. The local sandbox may prohibit container namespaces; native CI is then
 the runtime source of evidence, with that limitation reported explicitly.
+
+## Upstream URL availability
+
+Locks pin upstream RPM URLs and SHA-256 hashes; they do not preserve vendor
+files. A vendor can remove the previous minor release when publishing a new
+one. Acquisition then fails (for example, HTTP 404), and main CI stays broken
+until the PostgreSQL inputs and both native locks are refreshed through the
+normal candidate workflow and native CI passes. Never bypass hash, signature
+or vulnerability checks to recover. Any mirror or cache is an owner decision.
