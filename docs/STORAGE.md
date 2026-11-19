@@ -20,7 +20,7 @@ WAL; verify application data after a forced stop or resource failure.
 
 The inherited tests cover logical pg_dump/pg_restore into an isolated target,
 row/content checks, crash recovery, capacity failures and an immutable PostgreSQL
-18.4-to-18.6 compatibility fixture. This fixture is test-only, not a runtime
+18.4-to-18.7 compatibility fixture. This fixture is test-only, not a runtime
 dependency or qualification of that image. Preserve compatible locales; the
 cross-image fixture uses portable C with UTF-8 encoding.
 

@@ -109,7 +109,8 @@ def main() -> int:
         "rpm_architecture": inputs["architectures"][architecture]["rpm_architecture"],
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "postgresql_version": inputs["postgresql_version"],
-        "postgresql_rpm_version": inputs["postgresql_rpm_version"],
+        "postgresql_rpm_version": inputs["architectures"][architecture].get(
+            "postgresql_rpm_version", inputs["postgresql_rpm_version"]),
         "base_images": bases,
         "signing_keys": keys,
         "packages": packages,

@@ -44,3 +44,11 @@ Never falsify supplier RPM metadata or suppress scanner findings.
 Changed supplier bytes, missing sources, wrong architecture, unapproved signers,
 invalid hashes and signature failures block acquisition/build. Never substitute
 an unsigned package or weaken verification when a locked artifact disappears.
+
+The selected PostgreSQL RPM release can differ by architecture when PGDG
+publishes a native rebuild. `architectures.<arch>.postgresql_rpm_version`
+overrides the common input release for rendering that native lock. Each lock
+still requires all four PostgreSQL packages to match its exact selected release;
+offline builds take the RPM version label from that lock.
+PGDG source RPMs are acquired from the matching native architecture directory;
+a rebuild source may be present only in that directory.

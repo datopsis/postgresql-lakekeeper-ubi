@@ -8,7 +8,7 @@ password="update-${RANDOM}-OnlyForTesting"
 volume="${prefix}-data"
 backup_volume="${prefix}-backup"
 old_container="${prefix}-18-4"
-new_container="${prefix}-18-6"
+new_container="${prefix}-18-7"
 
 case "$(uname -m)" in
     x86_64)
@@ -113,7 +113,7 @@ fixture_digest=$("${runtime}" exec "${old_container}" psql -qAt --host=/var/run/
     --cap-drop ALL \
     --security-opt no-new-privileges:true \
     "${image}" >/dev/null
-wait_ready "${new_container}" 180006
+wait_ready "${new_container}" 180007
 test "$("${runtime}" exec "${new_container}" psql -qAt --host=/tmp --username=postgres \
     --command='SELECT count(*) FROM update_fixture;')" = 1000
 test "$("${runtime}" exec "${new_container}" psql -qAt --host=/tmp --username=postgres \
@@ -123,4 +123,4 @@ test "$("${runtime}" exec "${new_container}" psql -qAt --host=/tmp --username=po
     --format=custom --file=/tmp/post-update.dump postgres
 "${runtime}" exec "${new_container}" sh -c 'test -s /tmp/post-update.dump; test -s /backup/pre-update.dump'
 
-echo "PostgreSQL 18.4 to 18.6 preserved-data update passed for ${image}"
+echo "PostgreSQL 18.4 to 18.7 preserved-data update passed for ${image}"

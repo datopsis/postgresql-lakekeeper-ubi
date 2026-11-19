@@ -28,6 +28,7 @@ values = {item["signing_key_fingerprint"] for item in lock["packages"]
 assert len(values) == 1
 print(values.pop())
 ' "${lock}")
+postgresql_rpm_version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["postgresql_rpm_version"])' "${lock}")
 builder=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["base_images"]["builder"]["reference"])' "${lock}")
 runtime_base=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["base_images"]["runtime"]["reference"])' "${lock}")
 
@@ -50,6 +51,7 @@ build_arguments=(--file Containerfile --tag "${image}" --network=none \
     --build-arg UBI_MINIMAL_IMAGE=localhost/postgresql-lakekeeper-ubi-builder:locked \
     --build-arg UBI_MICRO_IMAGE=localhost/postgresql-lakekeeper-ubi-runtime:locked \
     --build-arg POSTGRESQL_SIGNER_FINGERPRINT="${postgresql_signer}" \
+    --build-arg POSTGRESQL_RPM_VERSION="${postgresql_rpm_version}" \
     --build-arg ARTIFACT_LOCK_SHA256="${lock_sha}" .)
 for release_argument in RELEASE_VERSION RELEASE_REVISION RELEASE_CREATED RELEASE_SOURCE; do
     if test -n "${!release_argument:-}"; then

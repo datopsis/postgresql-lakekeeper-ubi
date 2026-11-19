@@ -118,7 +118,7 @@ source_inventory="${output_dir}/source-inventory.tsv"
 while IFS= read -r source_rpm; do
     if [[ ${source_rpm} == postgresql18-* ]]; then
         repository=pgdg-18-source
-        url="https://dnf-srpms.postgresql.org/srpms/18/redhat/rhel-9-x86_64/${source_rpm}"
+        url="https://dnf-srpms.postgresql.org/srpms/18/redhat/rhel-9-${rpm_architecture}/${source_rpm}"
     else
         spec=${source_rpm%.rpm}
         query=$(find_url "${spec}" source)
